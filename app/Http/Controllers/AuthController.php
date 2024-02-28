@@ -8,6 +8,7 @@ use App\Models\User;
 use Validator;
 use Twilio\Rest\Client;
 use App\Traits\TwilioRequest;
+use App\Jobs\SendOtpMessage;
 
 
 class AuthController extends Controller
@@ -30,19 +31,19 @@ class AuthController extends Controller
 
                 $request->validate([
                     'name' => 'required|string',
-                    'phone'=> 'required', 'numeric', 'unique:users',
+                    'phone'=> 'required|numeric|unique:users',
                     'email'=>'required|string|unique:users',
                     'password'=>'required|string'
                 ]);
 
-                $this->Otpsend($request->phone);
+
                     $user = new User([
                         'name'  => $request->name,
                         'email' => $request->email,
                         'phone' => $request->phone,
                         'password' => bcrypt($request->password),
                     ]);
-
+                    SendOtpMessage::dispatch($request->phone)->delay(now()->addMinutes(1));
                 if($user->save()){
 
                     $phoneNumber = $request->phone;
