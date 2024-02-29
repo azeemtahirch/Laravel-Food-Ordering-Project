@@ -43,7 +43,7 @@ class AuthController extends Controller
                         'phone' => $request->phone,
                         'password' => bcrypt($request->password),
                     ]);
-                    SendOtpMessage::dispatch($request->phone)->delay(now()->addMinutes(1));
+                    SendOtpMessage::dispatch($request->phone);
                 if($user->save()){
 
                     $phoneNumber = $request->phone;
@@ -180,20 +180,12 @@ class AuthController extends Controller
 
                 try {
 
-                    $data = $request->validate([
+                    $request->validate([
                         'verification_code' => ['required', 'numeric'],
                         'phone' => ['required', 'string'],
                     ]);
 
-                    $verification =  $this->Otpverify($data['verification_code'],$data['phone']);
-                        if ($verification->valid) {
-                            User::where('phone', $data['phone'])->update(['isVerified' => true]);
-                            $phoneNumber =  $request->phone;
-                            return response()->json([
-                                'message' =>'Phone number verified',
-                                'phone' => $phoneNumber,
-                                ],200);
-                                               }
+                  SendOtpMessage::dispatch($request->verification_code,$request->phone);
 
                      $phoneNumber =  $request->phone;
                     return response()->json([
